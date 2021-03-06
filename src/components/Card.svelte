@@ -24,6 +24,9 @@
     width: 130px;
     height: 180px;
     background-color: crimson;
+    box-sizing: border-box;
+    border: 3px solid white;
+    border-radius: 10px;
   }
 
   .card--emoji {

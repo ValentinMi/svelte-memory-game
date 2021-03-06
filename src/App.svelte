@@ -1,10 +1,19 @@
 <script>
   import cardsJson from "./cards.json";
   import Card from "./components/Card.svelte";
+  import Chrono from "./components/Chrono.svelte";
 
   let cards = shuffleArray(cardsJson);
   let selectedCards = [];
   let pairsFound = [];
+  let isPlaying = false;
+  let cardsAreClickable = true;
+  let chrono;
+
+  $: win = pairsFound.length === cards.length / 2;
+  $: if (win) {
+    chrono.stopChrono();
+  }
 
   function shuffleArray(array) {
     return [...Array(array.length)]
@@ -13,6 +22,10 @@
   }
 
   function handleClickOnCard(e) {
+    if (!isPlaying) {
+      isPlaying = true;
+      chrono.startChrono();
+    }
     let cardIndex = e.detail.index;
     // If click on a founded pair , return
     if (pairsFound.includes(cards[cardIndex].pair)) return;
@@ -24,6 +37,7 @@
       cards = newCards;
       // If second card
     } else if (selectedCards.length === 1) {
+      cardsAreClickable = false; // Disable click to avoid spam
       newCards[cardIndex].isVisible = true;
       selectedCards = [...selectedCards, cardIndex];
       cards = newCards;
@@ -40,8 +54,9 @@
           });
           selectedCards = [];
           cards = newCards;
-        }, 1000);
+        }, 700);
       }
+      cardsAreClickable = true;
     }
   }
 
@@ -50,23 +65,27 @@
     pairsFound = [];
     cards = shuffleArray(cardsJson);
     cards = cards.map((card) => ({ ...card, isVisible: false }));
+    chrono.resetChrono();
   }
 </script>
 
 <div class="App">
-  <div class="card--grid">
+  <div class={`card--grid ${!cardsAreClickable && "disabled"}`}>
     {#each cards as card, i (`${card.id}-${i}`)}
       <div class="card--container">
         <Card on:click-card={handleClickOnCard} infos={card} index={i} />
       </div>
     {/each}
-    {#if pairsFound.length === cards.length / 2}
+    {#if win}
       <div class="win--overlay" />
       <div class="win--modal">
         You win
         <button on:click={handleReset} class="win--modal__reset">Reset</button>
       </div>
     {/if}
+  </div>
+  <div class="board">
+    <Chrono bind:this={chrono} on:resetGame={handleReset} />
   </div>
 </div>
 
@@ -79,6 +98,8 @@
 
   .App {
     padding: 4rem;
+    display: flex;
+    justify-content: center;
   }
 
   .card--container {
@@ -124,5 +145,9 @@
     bottom: 50px;
     left: 50%;
     padding: 10px;
+  }
+
+  .disabled {
+    pointer-events: none;
   }
 </style>
