@@ -21,6 +21,7 @@
   }
 
   function sortTimeHistory(history) {
+    if (!history) return;
     const sortedHistory = history.sort((a, b) => a - b);
     // Keep 5 best times
     return sortedHistory.slice(0, 5);
